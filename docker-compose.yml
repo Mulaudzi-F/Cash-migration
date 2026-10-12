@@ -1,0 +1,16 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: cashin-postgres
+    environment:
+      POSTGRES_DB: cashin
+      POSTGRES_USER: cashin_user
+      POSTGRES_PASSWORD: cashin_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - cashin-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  cashin-postgres-data:
