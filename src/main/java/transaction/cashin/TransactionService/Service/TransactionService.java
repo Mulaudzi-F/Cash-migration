@@ -1,8 +1,12 @@
 package transaction.cashin.TransactionService.Service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import transaction.cashin.TransactionService.Exception.PartyNotFoundException;
+import transaction.cashin.TransactionService.Exception.DuplicateTransactionException;
 import transaction.cashin.TransactionService.Integration.Amdocs.CashIn.CashInMetadata;
 import transaction.cashin.TransactionService.Integration.Amdocs.CashIn.CashInParty;
 import transaction.cashin.TransactionService.Integration.Amdocs.CashIn.CashInRequest;
@@ -36,6 +40,9 @@ import transaction.cashin.TransactionService.Validator.TransactionValidator;
 
 @Service
 public class TransactionService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final PartyRepository partyRepository;
 
@@ -107,37 +114,38 @@ public class TransactionService {
 
         cashInValidator.validate(request);
 
+        // PostgreSQL transaction-scoped advisory lock serializes requests sharing
+        // the same reference, including requests handled by different app instances.
+        // Acquire it BEFORE checking duplicates or invoking external Amdocs APIs.
+        // The lock is released automatically at transaction commit/rollback.
+        // This application/test configuration uses PostgreSQL.
+        entityManager.createNativeQuery(
+                "SELECT pg_advisory_xact_lock(hashtextextended(CAST(:reference AS text), 0))")
+                .setParameter("reference", request.getReference())
+                .getSingleResult();
 
-        
-        // 3. Authenticate with Amdocs
-       
-
-        AuthenticationResponse authenticationResponse =
-                authenticationService.authenticate();
-
-        String accessToken =
-                authenticationResponse.getAccessToken();
-
-
-        if (accessToken == null ||
-                accessToken.isBlank()) {
-
-            throw new IllegalStateException(
-                    "Amdocs authentication failed: no access token returned");
+        // Re-check only AFTER obtaining the lock: the previous request may
+        // have committed while this request was waiting for the lock.
+        if (transactionRepository.existsByReference(request.getReference())) {
+            throw new DuplicateTransactionException(
+                    "Transaction already exists: " + request.getReference());
         }
 
 
-       
-        // 4. Resolve parties
- 
+        
+        // 3. Validate local parties before any external Amdocs calls.
+        Party initiator = findPartyByMsisdn(request.getInitiatorMsisdn());
+        Party receiver = findPartyByMsisdn(request.getReceiverMsisdn());
 
-      //  Party initiator =
-        //        findPartyByMsisdn(
-        //                request.getInitiatorMsisdn());
+        // 4. Authenticate with Amdocs.
+        AuthenticationResponse authenticationResponse =
+                authenticationService.authenticate();
 
-      //  Party receiver =
-       //         findPartyByMsisdn(
-       //                 request.getReceiverMsisdn());
+        String accessToken = authenticationResponse.getAccessToken();
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new IllegalStateException(
+                    "Amdocs authentication failed: no access token returned");
+        }
 
 
         // 5. Check initiator Amdocs groups
@@ -161,21 +169,12 @@ public class TransactionService {
         }
 
 
-        /*
-        //Please return this as soon as you're done testing. It's super neccessary
-        if (!hasGroup(
-                initiatorGroupResponse,
-                "RET_Assujetti")) {
-
+        // The initiator must belong to the authorized group.
+        if (!hasGroup(initiatorGroupResponse, "RET_Assujetti")) {
             throw new IllegalStateException(
-                    "Initiator is not a member of the " +
-                    "RET_Assujetti group");
+                    "Initiator is not a member of the RET_Assujetti group");
         }
-		*/
-        
-        
 
-        //
         // 6. Check receiver Amdocs groups
         //
   
@@ -448,13 +447,8 @@ public class TransactionService {
                 LocalDateTime.now());
 
 
-     //   transaction.setInitiator(
-      //          initiator);
-
-
-      //  transaction.setReceiver(
-       //         receiver);
-
+        transaction.setInitiator(initiator);
+        transaction.setReceiver(receiver);
 
         // =========================================================
         // 14. Store Amdocs quotation information
@@ -540,3 +534,4 @@ public class TransactionService {
                 );
     }
 }
+

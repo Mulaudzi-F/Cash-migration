@@ -1,12 +1,6 @@
 package transaction.cashin.TransactionService.Integration.Amdocs.Authentication;
 
 import org.apache.camel.ProducerTemplate;
-import org.springframework.stereotype.Service;
-
-import org.apache.camel.ProducerTemplate;
-import org.springframework.stereotype.Service;
-
-import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,37 +21,38 @@ public class AuthenticationService {
     @Value("${amdocs.authentication.password}")
     private String password;
 
-    public AuthenticationService(
-            ProducerTemplate producerTemplate) {
-
+    public AuthenticationService(ProducerTemplate producerTemplate) {
         this.producerTemplate = producerTemplate;
     }
 
     public AuthenticationResponse authenticate() {
 
-        AuthenticationRequest request =
-                new AuthenticationRequest(
-                        grantType,
-                        apiKey,
-                        username,
-                        password
-                );
+        // Step 1: Build the authentication request
+        AuthenticationRequest request = new AuthenticationRequest(
+                grantType,
+                apiKey,
+                username,
+                password
+        );
 
-        AuthenticationResponse response =
-                producerTemplate.requestBody(
-                        "direct:amdocs-authentication",
-                        request,
-                        AuthenticationResponse.class
-                );
+        // Step 2: Send the request through Apache Camel
+        AuthenticationResponse response = producerTemplate.requestBody(
+                "direct:amdocs-authentication",
+                request,
+                AuthenticationResponse.class
+        );
 
-        if (response == null ||
-                response.getAccessToken() == null ||
-                response.getAccessToken().isBlank()) {
+        // Step 3: Validate the authentication response
+        if (response == null
+                || response.getAccessToken() == null
+                || response.getAccessToken().isBlank()) {
 
             throw new IllegalStateException(
-                    "Amdocs authentication failed: no access token returned");
+                    "Amdocs authentication failed: no access token returned"
+            );
         }
 
+        // Step 4: Return the authentication response
         return response;
     }
 }

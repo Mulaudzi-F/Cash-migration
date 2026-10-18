@@ -1,0 +1,15 @@
+package transaction.cashin.validator;
+
+import org.junit.jupiter.api.Test;
+import transaction.cashin.TransactionService.Validator.CashInValidator;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class CashInValidatorTest {
+
+    @Test
+    void validatorClassShouldExist() {
+        assertNotNull(CashInValidator.class);
+    }
+
+}

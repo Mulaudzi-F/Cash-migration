@@ -31,15 +31,18 @@ public class CashInRoute extends RouteBuilder {
         from("direct:amdocs-cashin")
             .routeId("amdocs-cashin-route")
 
-            .setHeader("Date")
-                .method(Instant.class, "now")
+            // FIX: Generate timestamp directly
+            // Prevent Camel from converting CashInRequest to Clock
+          .setHeader("Date", () -> Instant.now().toString())
 
+            // Amdocs authentication headers
             .setHeader("X-Client-ID")
                 .constant(clientId)
 
             .setHeader("X-API-Key")
                 .constant(apiKey)
 
+            // Unique correlation ID for tracking requests
             .process(exchange ->
                 exchange.getMessage().setHeader(
                     "x-correlationid",
@@ -47,6 +50,7 @@ public class CashInRoute extends RouteBuilder {
                 )
             )
 
+            // Amdocs configuration headers
             .setHeader("source_channel")
                 .constant(sourceChannel)
 
@@ -59,11 +63,14 @@ public class CashInRoute extends RouteBuilder {
             .setHeader("Content-Type")
                 .constant("application/json")
 
+            // Convert Java request object into JSON
             .marshal()
                 .json()
 
+            // Send Cash-In request to Amdocs
             .to("{{amdocs.cashin.url}}?httpMethod=POST")
 
+            // Convert JSON response into CashInResponse
             .unmarshal()
                 .json(CashInResponse.class);
     }
