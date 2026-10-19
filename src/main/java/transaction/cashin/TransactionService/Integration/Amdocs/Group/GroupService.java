@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.apache.camel.ProducerTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,22 +11,16 @@ public class GroupService {
 
     private final ProducerTemplate producerTemplate;
 
-    @Value("${amdocs.authentication.username}")
-    private String username;
-
-    @Value("${amdocs.authentication.password}")
-    private String password;
-
     public GroupService(ProducerTemplate producerTemplate) {
         this.producerTemplate = producerTemplate;
     }
 
-    public GroupResponse getGroup(GroupRequest request) {
+    public GroupResponse getGroup(GroupRequest request, String username, String password) {
         return producerTemplate.requestBodyAndHeader(
                 "direct:amdocs-get-group",
                 request,
                 "Authorization",
-                basicAuthorization(),
+                basicAuthorization(username, password),
                 GroupResponse.class
         );
     }
@@ -45,8 +38,8 @@ public class GroupService {
         );
     }
 
-    private String basicAuthorization() {
-        String credentials = username + ":" + password;
+    private String basicAuthorization(String username, String password) {
+        String credentials = username + ":" + (password == null ? "" : password);
         return "Basic " + Base64.getEncoder().encodeToString(
                 credentials.getBytes(StandardCharsets.UTF_8));
     }

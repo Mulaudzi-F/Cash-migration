@@ -2,6 +2,8 @@ package transaction.cashin.TransactionService.Integration.Amdocs.CashIn;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class CashInRequest {
 
     private String amount;
@@ -9,7 +11,10 @@ public class CashInRequest {
     private String subType;
     private String type;
     private String requestDate;
+    @JsonIgnore
     private String username;
+
+    @JsonIgnore
     private String password;
 
     private List<CashInParty> debitParty;

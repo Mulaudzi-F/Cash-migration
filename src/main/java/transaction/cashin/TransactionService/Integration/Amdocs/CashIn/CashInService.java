@@ -4,19 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.apache.camel.ProducerTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CashInService {
 
     private final ProducerTemplate producerTemplate;
-
-    @Value("${amdocs.authentication.username}")
-    private String username;
-
-    @Value("${amdocs.authentication.password}")
-    private String password;
 
     public CashInService(ProducerTemplate producerTemplate) {
         this.producerTemplate = producerTemplate;
@@ -27,7 +20,7 @@ public class CashInService {
                 "direct:amdocs-cashin",
                 request,
                 "Authorization",
-                basicAuthorization(),
+                basicAuthorization(request.getUsername(), request.getPassword()),
                 CashInResponse.class
         );
     }
@@ -45,8 +38,8 @@ public class CashInService {
         );
     }
 
-    private String basicAuthorization() {
-        String credentials = username + ":" + password;
+    private String basicAuthorization(String username, String password) {
+        String credentials = username + ":" + (password == null ? "" : password);
         return "Basic " + Base64.getEncoder().encodeToString(
                 credentials.getBytes(StandardCharsets.UTF_8));
     }

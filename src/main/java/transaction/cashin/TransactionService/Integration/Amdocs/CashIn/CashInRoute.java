@@ -31,8 +31,12 @@ public class CashInRoute extends RouteBuilder {
         from("direct:amdocs-cashin")
             .routeId("amdocs-cashin-route")
 
-            .setHeader("Date")
-                .method(Instant.class, "now")
+            .process(exchange ->
+                exchange.getMessage().setHeader(
+                    "Date",
+                    Instant.now().toString()
+                )
+            )
 
             .setHeader("X-Client-ID")
                 .constant(clientId)
@@ -62,7 +66,8 @@ public class CashInRoute extends RouteBuilder {
             .marshal()
                 .json()
 
-            .to("{{amdocs.cashin.url}}?httpMethod=POST")
+            .to("{{amdocs.cashin.url}}?httpMethod=POST"
+                    + "&headerFilterStrategy=#dateHeaderFilterStrategy")
 
             .unmarshal()
                 .json(CashInResponse.class);
