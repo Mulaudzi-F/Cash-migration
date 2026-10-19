@@ -1,8 +1,5 @@
 package transaction.cashin.TransactionService.Integration.Amdocs.Authentication;
 
-import org.apache.camel.builder.RouteBuilder;
-import org.springframework.stereotype.Component;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -21,6 +18,9 @@ public class AuthenticationRoute extends RouteBuilder {
             .setHeader("Content-Type")
                 .constant(
                     "application/x-www-form-urlencoded")
+
+            .setHeader("Accept")
+                .constant("*/*")
 
             .process(exchange -> {
 
