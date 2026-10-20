@@ -2,12 +2,13 @@ package transaction.cashin.TransactionService.Validator;
 
 import org.springframework.stereotype.Component;
 
+import transaction.cashin.TransactionService.Dto.CashInOperationRequest;
 import transaction.cashin.TransactionService.Dto.TransactionRequest;
 
 @Component
 public class CashInValidator {
 
-    public void validate(TransactionRequest request) {
+    public void validate(CashInOperationRequest request) {
 
         if (request == null) {
             throw new IllegalArgumentException(
@@ -16,31 +17,35 @@ public class CashInValidator {
 
         validateTransactionType(request);
         validateAmount(request);
-        validateCurrency(request);
+       // validateCurrency(request);
         validateSubType(request);
         validateReference(request);
-        validateInitiator(request);
+      //  validateInitiator(request);
         validateReceiver(request);
     }
 
-    private void validateTransactionType(TransactionRequest request) {
+    
+ 
+    
+    
+    private void validateTransactionType(CashInOperationRequest request) {
 
-        if (request.getTransactionType() == null ||
-                request.getTransactionType().isBlank()) {
+        if (request.getType() == null ||
+                request.getType().isBlank()) {
 
             throw new IllegalArgumentException(
                     "Transaction type is required");
         }
 
         if (!"CASH_IN".equalsIgnoreCase(
-                request.getTransactionType())) {
+                request.getType())) {
 
             throw new IllegalArgumentException(
                     "Only CASH_IN transactions are supported");
         }
     }
 
-    private void validateAmount(TransactionRequest request) {
+    private void validateAmount(CashInOperationRequest request) {
 
         if (request.getAmount() == null ||
                 request.getAmount().signum() <= 0) {
@@ -50,7 +55,8 @@ public class CashInValidator {
         }
     }
 
-    private void validateCurrency(TransactionRequest request) {
+    /*
+    private void validateCurrency(CashInOperationRequest request) {
 
         if (request.getCurrency() == null ||
                 request.getCurrency().isBlank()) {
@@ -58,19 +64,19 @@ public class CashInValidator {
             throw new IllegalArgumentException(
                     "Currency is required");
         }
-    }
+    }*/
 
-    private void validateSubType(TransactionRequest request) {
+    private void validateSubType(CashInOperationRequest request) {
 
-        if (request.getSubType() == null ||
-                request.getSubType().isBlank()) {
+        if (request.getSubtype() == null ||
+                request.getSubtype().isBlank()) {
 
             throw new IllegalArgumentException(
                     "Cash-In subtype is required");
         }
 
-        if (!"cashin".equalsIgnoreCase(request.getSubType()) &&
-                !"remote_cashin".equalsIgnoreCase(request.getSubType())) {
+        if (!"cashin".equalsIgnoreCase(request.getSubtype()) &&
+                !"remote_cashin".equalsIgnoreCase(request.getSubtype())) {
 
             throw new IllegalArgumentException(
                     "Invalid Cash-In subtype. " +
@@ -78,17 +84,18 @@ public class CashInValidator {
         }
     }
 
-    private void validateReference(TransactionRequest request) {
+    private void validateReference(CashInOperationRequest request) {
 
-        if (request.getReference() == null ||
-                request.getReference().isBlank()) {
+        if (request.getCashPointRef() == null ||
+                request.getCashPointRef().isBlank()) {
 
             throw new IllegalArgumentException(
                     "Transaction reference is required");
         }
     }
 
-    private void validateInitiator(TransactionRequest request) {
+    /*
+    private void validateInitiator(CashInOperationRequest request) {
 
         if (request.getInitiatorMsisdn() == null ||
                 request.getInitiatorMsisdn().isBlank()) {
@@ -96,12 +103,12 @@ public class CashInValidator {
             throw new IllegalArgumentException(
                     "Initiator MSISDN is required");
         }
-    }
+    }*/
 
-    private void validateReceiver(TransactionRequest request) {
+    private void validateReceiver(CashInOperationRequest request) {
 
-        if (request.getReceiverMsisdn() == null ||
-                request.getReceiverMsisdn().isBlank()) {
+        if (request.getCustomerMsisdn() == null ||
+                request.getCustomerMsisdn().isBlank()) {
 
             throw new IllegalArgumentException(
                     "Receiver MSISDN is required");

@@ -26,14 +26,15 @@ public class GroupService {
     }
 
     public GroupResponse getGroup(
-            GroupRequest request,
-            String accessToken) {
+            GroupRequest request)
+          //  String accessToken) 
+    {
 
-        return producerTemplate.requestBodyAndHeader(
+        return producerTemplate.requestBody(
                 "direct:amdocs-get-group",
                 request,
-                "Authorization",
-                "Bearer " + accessToken,
+            //    "Authorization",
+            //    "Bearer " + accessToken,
                 GroupResponse.class
         );
     }

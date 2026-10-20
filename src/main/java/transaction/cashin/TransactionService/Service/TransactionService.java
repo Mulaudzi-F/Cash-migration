@@ -129,11 +129,11 @@ public class TransactionService {
 
         // 1. Common validation
 
-        transactionValidator.validate(request);
+       // transactionValidator.validate(request);
 
         // 2. Cash-In specific validation
 
-        cashInValidator.validate(request);
+       // cashInValidator.validate(request);
 
         // 3. Authenticate with Amdocs
 
@@ -160,7 +160,7 @@ public class TransactionService {
 
         GroupRequest initiatorGroupRequest = new GroupRequest(request.getInitiatorMsisdn());
 
-        GroupResponse initiatorGroupResponse = groupService.getGroup(initiatorGroupRequest, accessToken);
+        GroupResponse initiatorGroupResponse = groupService.getGroup(initiatorGroupRequest);
 
         if (initiatorGroupResponse == null) {
 
@@ -181,7 +181,7 @@ public class TransactionService {
 
         GroupRequest receiverGroupRequest = new GroupRequest(request.getReceiverMsisdn());
 
-        GroupResponse receiverGroupResponse = groupService.getGroup(receiverGroupRequest, accessToken);
+        GroupResponse receiverGroupResponse = groupService.getGroup(receiverGroupRequest);
 
         if (receiverGroupResponse == null) {
 
@@ -432,27 +432,36 @@ public class TransactionService {
         return response;
     }
 
+    
+    
+    
     public CashInOperationResponse mbOTCCashinOperation(CashInOperationRequest request) {
-        if (request == null || isBlank(request.getRequestId()) || isBlank(request.getCashPointRef()) || isBlank(request.getCustomerMsisdn()) || request
-                .getAmount() == null || isBlank(request.getCashPointPin()) || isBlank(request.getType()) || isBlank(request.getSubtype())) {
-            throw new IllegalArgumentException("Bad Inputs");
-        }
-        if ("remote_cashin".equalsIgnoreCase(request.getSubtype()) && isBlank(request.getFeeQuoteId())) {
-            throw new IllegalArgumentException("Bad Inputs");
-        }
+    	
+    	
+        // 1. Common validation
+        transactionValidator.validate(request);
 
-        AuthenticationResponse authentication;
-        try {
-            authentication = authenticationService.authenticate();
-        } catch (RuntimeException exception) {
-            return failedOperation(exception);
-        }
+        // 2. Cash-In specific validation
+        cashInValidator.validate(request);
+        
+        
 
+
+     //   AuthenticationResponse authentication;
+    //    try {
+    //        authentication = authenticationService.authenticate();
+     //   } catch (RuntimeException exception) {
+      //      return failedOperation(exception);
+     //   }
+
+        
+        //Getting Groups
         GroupResponse groups;
         try {
             groups = groupService.getGroup(
-                    new GroupRequest(request.getCashPointRef()),
-                    authentication.getAccessToken());
+                    new GroupRequest(request.getCashPointRef())
+                 //   authentication.getAccessToken()
+                    );
         } catch (RuntimeException exception) {
             return failedOperation(exception);
         }

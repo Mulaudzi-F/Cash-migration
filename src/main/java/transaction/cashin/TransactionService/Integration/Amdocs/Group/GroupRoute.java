@@ -1,7 +1,10 @@
 package transaction.cashin.TransactionService.Integration.Amdocs.Group;
 
 import org.apache.camel.Exchange;
+
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.UUID;
 
 import org.apache.camel.spi.HeaderFilterStrategy;
@@ -36,7 +39,11 @@ public class GroupRoute extends RouteBuilder {
     @Value("${amdocs.suppress-sms:0}")
     private String suppressSms;
     
-    
+    @Value("${amdocs.authentication.tech.username}")
+    private String username;
+
+    @Value("${amdocs.authentication.tech.password}")
+    private String password;
     
     
     @Bean("dateHeaderFilterStrategy")
@@ -111,6 +118,21 @@ public class GroupRoute extends RouteBuilder {
             )
         )
 
+            .process(exchange -> {
+                String credentials = username + ":" + password;
+
+                String encodedCredentials = Base64.getEncoder()
+                        .encodeToString(
+                                credentials.getBytes(StandardCharsets.UTF_8)
+                        );
+
+                exchange.getMessage().setHeader(
+                        "Authorization",
+                        "Basic " + encodedCredentials
+                );
+            }) 
+            
+            
             .setHeader("X-Client-ID")
                 .constant(clientId)
 
